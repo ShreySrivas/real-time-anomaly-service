@@ -107,6 +107,12 @@ docker-compose up --build
   * Add data source: Prometheus at `http://prometheus:9090`
   * Import or build dashboards (e.g., anomaly rate, cache hit rate)
 
+## Images
+![image](https://github.com/user-attachments/assets/7222e78b-a7e3-43ef-865a-8960f4515e10)
+
+![image](https://github.com/user-attachments/assets/c82068bd-3a3c-4715-8caf-51b589fc67b9)
+
+
 ---
 
 ## 🐞 Troubleshooting
