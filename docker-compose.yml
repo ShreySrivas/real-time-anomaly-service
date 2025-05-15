@@ -1,0 +1,89 @@
+
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+  
+  redis_exporter:
+    image: oliver006/redis_exporter:v1.49.0
+    command:
+      - --redis.addr=redis://redis:6379/0
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - kafka
+      - redis
+
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # mount your local data so producer can read data/NAB/…
+    volumes:
+      - ./data:/app/data
+    command: ["python", "producer.py"]
+    depends_on:
+      - kafka
+
+  alert_subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      GMAIL_USER:    "${GMAIL_USER}"
+      GMAIL_PASS:    "${GMAIL_PASS}"
+      ALERT_RECIPIENT: "${ALERT_RECIPIENT}"
+    command: ["python", "alert_subscriber.py"]
+    depends_on:
+      - redis
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prom/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - consumer
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

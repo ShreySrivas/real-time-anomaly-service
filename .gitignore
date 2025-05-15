@@ -1,0 +1,11 @@
+# data folder
+data/
+
+# environment file
+.env
+
+# virtual environment
+venv/
+
+# trained model
+model/isolation_forest.pkl
