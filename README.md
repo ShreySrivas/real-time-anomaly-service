@@ -65,11 +65,6 @@ python model/train_isolation_forest.py
 
 * Outputs: `model/isolation_forest.pkl` with model, scaler, feature list
 
-4. **Deactivate:**
-
-```bash
-deactivate
-```
 
 ---
 
